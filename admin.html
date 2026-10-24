@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Admin Pusat - Harasa Coffee & Eatery</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 select-none overflow-hidden" x-data="adminApp()" x-init="initApp()">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="h-16 bg-slate-900/90 border-b border-slate-800 px-6 flex items-center justify-between z-20 backdrop-blur-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                <i class="fa-solid fa-gauge-high text-xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none text-white tracking-wide">
+                    Harasa Coffee & Eatery
+                    <span class="text-amber-400 text-xs px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 ml-1">Admin Pusat</span>
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5" x-text="formattedTime"></p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- LINK NAVIGASI LANGSUNG KE KASIR (index.html) -->
+            <a href="index.html" class="px-3.5 py-2 text-xs font-bold bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg transition flex items-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-cash-register"></i>
+                <span>Buka Kasir POS</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN ADMIN CONTAINER -->
+    <div class="h-[calc(100vh-4rem)] flex overflow-hidden">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between">
+            <div class="space-y-1">
+                <div class="px-3 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Menu Manajemen</div>
+                
+                <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'" class="w-full px-3.5 py-2.5 rounded-xl text-xs transition flex items-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i>
+                    <span>Dashboard & Insight</span>
+                </button>
+
+                <button @click="activeTab = 'products'" :class="activeTab === 'products' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'" class="w-full px-3.5 py-2.5 rounded-xl text-xs transition flex items-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-utensils w-4 text-center"></i>
+                    <span>Katalog Menu & Harga</span>
+                </button>
+
+                <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'" class="w-full px-3.5 py-2.5 rounded-xl text-xs transition flex items-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+                    <span>Laporan Transaksi</span>
+                </button>
+
+                <button @click="activeTab = 'staff'" :class="activeTab === 'staff' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'" class="w-full px-3.5 py-2.5 rounded-xl text-xs transition flex items-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-users-gear w-4 text-center"></i>
+                    <span>Manajemen Staf & PIN</span>
+                </button>
+            </div>
+
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+                <p class="text-slate-400">Status Database:</p>
+                <p class="text-emerald-400 font-bold flex items-center space-x-1.5 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Tersinkron Lokal</span>
+                </p>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto p-6 bg-slate-950">
+
+            <!-- TAB 1: DASHBOARD -->
+            <div x-show="activeTab === 'dashboard'" class="space-y-6">
+                <h2 class="text-xl font-bold text-white">Ringkasan Performa Outlet</h2>
+
+                <!-- STAT CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
+                        <p class="text-xs text-slate-400 font-medium">Total Omset Hari Ini</p>
+                        <h3 class="text-2xl font-extrabold text-amber-400 mt-2" x-text="formatRupiah(getTotalRevenue())"></h3>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
+                        <p class="text-xs text-slate-400 font-medium">Total Transaksi Selesai</p>
+                        <h3 class="text-2xl font-extrabold text-emerald-400 mt-2" x-text="recentTransactions.filter(t => !t.refunded).length + ' Transaksi'"></h3>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
+                        <p class="text-xs text-slate-400 font-medium">Item Di-Refund / Void</p>
+                        <h3 class="text-2xl font-extrabold text-rose-400 mt-2" x-text="recentTransactions.filter(t => t.refunded).length + ' Item'"></h3>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS & SYSTEM INFO -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-3">
+                    <h3 class="font-bold text-base text-white">Kontrol Cepat Pusat</h3>
+                    <p class="text-xs text-slate-400">Gunakan tombol di bawah jika ingin mereset/membersihkan riwayat transaksi lokal untuk testing.</p>
+                    <button @click="resetTransactionsData()" class="px-4 py-2 bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 rounded-xl text-xs font-bold transition cursor-pointer">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Reset Data Transaksi
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 2: MANAGEMENT PRODUK -->
+            <div x-show="activeTab === 'products'" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white">Daftar Menu F&B Harasa</h2>
+                    <button @click="openAddProductModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Tambah Menu Baru</span>
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold">
+                            <tr>
+                                <th class="p-3.5">ID</th>
+                                <th class="p-3.5">Nama Menu</th>
+                                <th class="p-3.5">Kategori</th>
+                                <th class="p-3.5 text-right">Harga Jual</th>
+                                <th class="p-3.5 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <template x-for="prod in productsList" :key="prod.id">
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-3.5 font-mono text-slate-500" x-text="prod.id"></td>
+                                    <td class="p-3.5 font-bold text-white" x-text="prod.name"></td>
+                                    <td class="p-3.5 text-slate-400" x-text="prod.categoryName"></td>
+                                    <td class="p-3.5 text-right font-bold text-amber-400" x-text="formatRupiah(prod.price)"></td>
+                                    <td class="p-3.5 text-center space-x-1">
+                                        <button @click="deleteProduct(prod.id)" class="px-2.5 py-1 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg border border-rose-500/30 transition text-[11px] font-bold cursor-pointer">
+                                            Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: LAPORAN TRANSAKSI -->
+            <div x-show="activeTab === 'reports'" class="space-y-6">
+                <h2 class="text-xl font-bold text-white">Laporan Transaksi Kasir</h2>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold">
+                            <tr>
+                                <th class="p-3.5">ID Transaksi</th>
+                                <th class="p-3.5">Waktu</th>
+                                <th class="p-3.5">Customer</th>
+                                <th class="p-3.5">Petugas Kasir</th>
+                                <th class="p-3.5 text-right">Total Tagihan</th>
+                                <th class="p-3.5 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <template x-if="recentTransactions.length === 0">
+                                <tr>
+                                    <td colspan="6" class="p-6 text-center text-slate-500">Belum ada riwayat transaksi.</td>
+                                </tr>
+                            </template>
+                            <template x-for="trx in recentTransactions" :key="trx.id">
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-3.5 font-mono font-bold text-amber-400" x-text="'#' + trx.id"></td>
+                                    <td class="p-3.5 text-slate-400" x-text="trx.time"></td>
+                                    <td class="p-3.5 font-bold text-white" x-text="trx.customerName"></td>
+                                    <td class="p-3.5 text-slate-300" x-text="trx.cashierName"></td>
+                                    <td class="p-3.5 text-right font-extrabold text-emerald-400" x-text="formatRupiah(trx.grandTotal)"></td>
+                                    <td class="p-3.5 text-center">
+                                        <span :class="trx.refunded ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'" class="px-2.5 py-1 rounded-full border text-[10px] font-bold" x-text="trx.refunded ? 'Refunded' : 'Selesai'"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: MANAJEMEN STAF -->
+            <div x-show="activeTab === 'staff'" class="space-y-6">
+                <h2 class="text-xl font-bold text-white">Daftar Akses Staf & PIN Terotorisasi</h2>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-lg space-y-4">
+                    <p class="text-xs text-slate-400">PIN default untuk akses Leader saat ini: <strong class="text-amber-400 font-mono">8888</strong> (Akun: Rian Hidayat).</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SCRIPT ALPINE ADMIN LOGIC -->
+    <script>
+        function adminApp() {
+            return {
+                activeTab: 'dashboard',
+                formattedTime: '',
+                recentTransactions: [],
+                productsList: [
+                    { id: 101, name: 'Aren Harasa', categoryName: 'Signature Coffee', price: 28000 },
+                    { id: 102, name: 'Krimi Sandjaya', categoryName: 'Signature Coffee', price: 28000 },
+                    { id: 201, name: 'Tubruk', categoryName: 'Coffee', price: 19000 },
+                    { id: 501, name: 'French Fries', categoryName: 'Snacks', price: 25000 },
+                    { id: 701, name: 'Nasi Goreng Kampung', categoryName: 'Main Course', price: 32000 }
+                ],
+
+                initApp() {
+                    this.updateTime();
+                    setInterval(() => { this.updateTime(); }, 1000);
+
+                    const savedTransactions = localStorage.getItem('du_transactions');
+                    if (savedTransactions) {
+                        this.recentTransactions = JSON.parse(savedTransactions);
+                    }
+                },
+
+                updateTime() {
+                    this.formattedTime = new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'medium' }).format(new Date());
+                },
+
+                formatRupiah(num) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
+                },
+
+                getTotalRevenue() {
+                    return this.recentTransactions
+                        .filter(t => !t.refunded)
+                        .reduce((sum, t) => sum + (t.grandTotal || 0), 0);
+                },
+
+                deleteProduct(id) {
+                    if (confirm('Hapus menu ini?')) {
+                        this.productsList = this.productsList.filter(p => p.id !== id);
+                    }
+                },
+
+                openAddProductModal() {
+                    const name = prompt('Masukkan Nama Menu Baru:');
+                    if (!name) return;
+                    const price = prompt('Masukkan Harga Jual (Rp):');
+                    if (!price) return;
+
+                    this.productsList.push({
+                        id: Date.now(),
+                        name: name,
+                        categoryName: 'Menu Tambahan',
+                        price: parseInt(price) || 0
+                    });
+                    alert('Menu baru berhasil ditambahkan!');
+                },
+
+                resetTransactionsData() {
+                    if (confirm('Yakin ingin mereset seluruh data riwayat transaksi?')) {
+                        localStorage.removeItem('du_transactions');
+                        this.recentTransactions = [];
+                        alert('Data transaksi berhasil direset.');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

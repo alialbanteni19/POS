@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan Kasir - Dapur Umi Khalid</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 select-none flex flex-col items-center justify-center p-4" x-data="settingApp()" x-init="initSetting()">
+
+    <!-- CONTAINER PENGATURAN -->
+    <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+        
+        <!-- HEADER PENGATURAN -->
+        <div class="bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-500">
+                    <i class="fa-solid fa-gear text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base text-white leading-none">Pengaturan Kasir</h1>
+                    <p class="text-xs text-slate-400 mt-1">Konfigurasi & Status Integrasi Outlet</p>
+                </div>
+            </div>
+            
+            <a href="Test.html" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center space-x-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Kembali ke Kasir</span>
+            </a>
+        </div>
+
+        <!-- CONTENT BODY -->
+        <div class="p-6 space-y-5 text-xs">
+            
+            <!-- INFORMASI OUTLET -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <span class="text-slate-400 font-medium">Nama Outlet / Restoran:</span>
+                    <span class="font-bold text-white text-sm" x-text="storeInfo.name"></span>
+                </div>
+                <div class="flex justify-between items-center pt-1">
+                    <span class="text-slate-400 font-medium">Database Penyimpanan:</span>
+                    <span class="text-emerald-400 font-bold flex items-center">
+                        <i class="fa-solid fa-circle-check mr-1.5"></i> LocalStorage Active
+                    </span>
+                </div>
+            </div>
+
+            <!-- STATUS SINKRONISASI PUSAT -->
+            <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <h3 class="font-bold text-amber-400 text-xs flex items-center space-x-2">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Status Integrasi Web Pusat</span>
+                </h3>
+                <p class="text-slate-300 leading-relaxed">
+                    Data produk, harga resep (<code>du_products</code>), dan daftar staf karyawan (<code>du_staff</code>) terhubung langsung dengan Web Pusat Admin.
+                </p>
+                <div class="grid grid-cols-2 gap-2 text-center pt-1">
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                        <p class="text-[10px] text-slate-400">Total Menu Terbaca</p>
+                        <p class="text-sm font-bold text-white mt-0.5" x-text="totalProducts + ' Menu'"></p>
+                    </div>
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                        <p class="text-[10px] text-slate-400">Total Staf Terdaftar</p>
+                        <p class="text-sm font-bold text-white mt-0.5" x-text="totalStaff + ' Staf'"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOMBOL AKSI CEPTA -->
+            <div class="space-y-2 pt-2">
+                <button @click="syncData()" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Paksa Sinkronkan Ulang Data Kasir</span>
+                </button>
+
+                <a href="admin.html" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl border border-slate-700 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>Buka Web Admin Pusat (`admin.html`)</span>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 text-center text-[10px] text-slate-500">
+            Dapur Umi Khalid POS - Multi-Tab Offline Ready System
+        </div>
+    </div>
+
+    <!-- ALPINE LOGIC -->
+    <script>
+        function settingApp() {
+            return {
+                storeInfo: { name: 'Dapur Umi Khalid' },
+                totalProducts: 0,
+                totalStaff: 0,
+
+                initSetting() {
+                    const savedProducts = localStorage.getItem('du_products');
+                    if (savedProducts) {
+                        this.totalProducts = JSON.parse(savedProducts).length;
+                    }
+
+                    const savedStaff = localStorage.getItem('du_staff');
+                    if (savedStaff) {
+                        this.totalStaff = JSON.parse(savedStaff).length;
+                    }
+                },
+
+                syncData() {
+                    alert('Data kasir berhasil diperbarui dan disinkronkan!');
+                    this.initSetting();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
