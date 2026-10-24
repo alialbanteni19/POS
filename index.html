@@ -107,13 +107,14 @@
     </header>
 
     <!-- MAIN APP CONTAINER -->
-    <main class="h-[calc(100vh-4rem)] relative overflow-hidden">
+    <main class="h-[calc(100vh-4rem)] w-screen overflow-hidden">
 
         <!-- ==================== TAMPILAN KASIR ==================== -->
-        <div x-show="currentView === 'pos'" class="h-full flex flex-col lg:flex-row overflow-hidden">
+        <div x-show="currentView === 'pos'" class="h-full w-full grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
             
-            <div class="flex-1 flex flex-col h-full bg-slate-900 border-r border-slate-800 overflow-hidden">
-                <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex items-center space-x-2">
+            <!-- KATALOG / TAB KIRI (8 Kolom) -->
+            <div class="lg:col-span-8 h-full flex flex-col bg-slate-900 border-r border-slate-800 overflow-hidden">
+                <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex items-center space-x-2 flex-shrink-0">
                     <button @click="posSubTab = 'catalog'" :class="posSubTab === 'catalog' ? 'bg-slate-800 text-brand-500 border-slate-700 font-bold' : 'text-slate-400 hover:text-slate-200'" class="px-3 py-1.5 rounded-lg text-xs border border-transparent transition flex items-center space-x-1.5 cursor-pointer">
                         <i class="fa-solid fa-utensils"></i>
                         <span>Katalog Menu</span>
@@ -134,7 +135,7 @@
 
                 <!-- SUB TAB KATALOG MENU -->
                 <div x-show="posSubTab === 'catalog'" class="flex-1 flex flex-col overflow-hidden">
-                    <div class="p-4 border-b border-slate-800 space-y-3 bg-slate-900/50">
+                    <div class="p-4 border-b border-slate-800 space-y-3 bg-slate-900/55 flex-shrink-0">
                         <div class="flex items-center space-x-3">
                             <div class="relative flex-1">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
@@ -158,7 +159,7 @@
                     </div>
 
                     <!-- GRID MENU -->
-                    <div class="flex-1 overflow-y-auto p-4">
+                    <div class="flex-1 overflow-y-auto p-4 min-h-0">
                         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                             <template x-for="product in filteredProducts()" :key="product.id">
                                 <div @click="openCustomizationModal(product)" class="group bg-slate-800/60 hover:bg-slate-800 border border-slate-800 hover:border-brand-500/50 rounded-xl p-3 flex flex-col justify-between cursor-pointer transition hover:scale-[1.02]">
@@ -185,7 +186,7 @@
                 </div>
 
                 <!-- SUB TAB DENAH MEJA + TANPA MEJA -->
-                <div x-show="posSubTab === 'tables'" class="flex-1 p-6 overflow-y-auto space-y-6">
+                <div x-show="posSubTab === 'tables'" class="flex-1 p-6 overflow-y-auto space-y-6 min-h-0">
                     <div>
                         <h2 class="text-lg font-bold text-white mb-1">Denah Meja Restoran (Real-Time)</h2>
                         <p class="text-xs text-slate-400 mb-4">Klik meja terisi (Merah) untuk memanggil pesanannya kembali.</p>
@@ -232,7 +233,7 @@
                 </div>
 
                 <!-- SUB TAB RIWAYAT TRANSAKSI & PRINT STRUK -->
-                <div x-show="posSubTab === 'history'" class="flex-1 p-5 overflow-y-auto space-y-4">
+                <div x-show="posSubTab === 'history'" class="flex-1 p-5 overflow-y-auto space-y-4 min-h-0">
                     <div class="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <div>
                             <h2 class="text-base font-bold text-white flex items-center space-x-2">
@@ -282,7 +283,7 @@
                 </div>
 
                 <!-- SUB TAB STOCK OPNAME KASIR -->
-                <div x-show="posSubTab === 'opname'" class="flex-1 p-5 overflow-y-auto space-y-4">
+                <div x-show="posSubTab === 'opname'" class="flex-1 p-5 overflow-y-auto space-y-4 min-h-0">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 p-4 rounded-xl border border-slate-800 gap-3">
                         <div>
                             <h2 class="text-base font-bold text-white flex items-center space-x-2">
@@ -332,8 +333,8 @@
                 </div>
             </div>
 
-            <!-- KERANJANG KASIR -->
-            <div class="w-full lg:w-[420px] bg-slate-950 flex flex-col h-full border-t lg:border-t-0 border-slate-800">
+            <!-- KERANJANG KASIR / TAB KANAN (4 Kolom) -->
+            <div class="lg:col-span-4 h-full bg-slate-950 flex flex-col border-t lg:border-t-0 border-slate-800 overflow-hidden">
                 <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/30 flex-shrink-0">
                     <div class="flex-1 pr-2">
                         <h2 class="font-bold text-base text-white">Pesanan Aktif</h2>
@@ -346,8 +347,8 @@
                     </div>
                 </div>
 
-                <!-- LIST ITEM (BISA DI-SCROLL & MENYESUAIKAN RUANG) -->
-                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- LIST ITEM KERANJANG (BISA DI-SCROLL MANDIRI) -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
                     <template x-if="cart.length === 0">
                         <div class="h-full flex flex-col items-center justify-center text-slate-600 py-12">
                             <i class="fa-solid fa-basket-shopping text-5xl mb-3 opacity-40"></i>
@@ -383,7 +384,7 @@
                     </template>
                 </div>
 
-                <!-- TOMBOL AKSI BAWAH (STICKY & TIDAK AKAN KETUTUPAN) -->
+                <!-- TOMBOL AKSI BAWAH (STICKY & AMAN TIDAK KETUTUPAN) -->
                 <div class="p-4 border-t border-slate-800 bg-slate-900/60 space-y-3 flex-shrink-0">
                     <div class="flex justify-between text-base font-bold text-white pt-1">
                         <span>Total Tagihan</span><span class="text-brand-500" x-text="formatRupiah(getCartSubtotal())"></span>
@@ -394,6 +395,7 @@
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- ==================== PANEL LEADER ==================== -->
         <div x-show="currentView === 'leader'" class="h-full flex overflow-hidden">
@@ -752,9 +754,9 @@
                     setInterval(() => { this.updateTime(); }, 1000);
 
                     const currentVersion = localStorage.getItem('du_version');
-                    if (currentVersion !== '2.4') {
+                    if (currentVersion !== '2.5') {
                         localStorage.clear();
-                        localStorage.setItem('du_version', '2.4');
+                        localStorage.setItem('du_version', '2.5');
                     }
 
                     const savedTransactions = localStorage.getItem('du_transactions');
