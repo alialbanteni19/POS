@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dapur Umi Khalid - Analisis FP-Growth</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- SIDEBAR NAVIGASI -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 border-r border-slate-800 flex flex-col justify-between">
+        <div>
+            <!-- Header Brand -->
+            <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white text-base leading-tight">Dapur Umi Khalid</h1>
+                    <p class="text-xs text-slate-400">FP-Growth Analytics</p>
+                </div>
+            </div>
+
+            <!-- Menu Navigasi -->
+            <nav class="p-4 space-y-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-brand-600 text-white shadow-md">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    Dashboard
+                </button>
+                <button onclick="switchTab('parameter')" id="nav-parameter" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+                    <i class="fa-solid fa-sliders w-5 text-center"></i>
+                    Parameter & Proses
+                </button>
+                <button onclick="switchTab('hasil')" id="nav-hasil" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+                    <i class="fa-solid fa-boxes-packing w-5 text-center"></i>
+                    Hasil & Rekomendasi
+                </button>
+                <button onclick="switchTab('data')" id="nav-data" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+                    <i class="fa-solid fa-database w-5 text-center"></i>
+                    Data Transaksi
+                </button>
+            </nav>
+        </div>
+
+        <!-- Footer Sidebar -->
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+            <p>Skripsi Teknik Informatika</p>
+            <p class="mt-1 font-semibold text-slate-400">UNPAM &copy; 2026</p>
+        </div>
+    </aside>
+
+    <!-- KONTEN UTAMA -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <!-- TOPBAR -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+            <div>
+                <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard Analisis</h2>
+                <p id="page-subtitle" class="text-xs text-slate-500">Ikhtisar pola transaksi dan metrik performa algoritma</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Sistem Siap
+                </span>
+                <div class="w-9 h-9 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm border border-brand-200">
+                    UK
+                </div>
+            </div>
+        </header>
+
+        <!-- AREA HALAMAN -->
+        <div class="p-6 space-y-6 max-w-7xl w-full mx-auto">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <!-- KARTU STATISTIK -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Transaksi</span>
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 id="stat-total-trans" class="text-2xl font-bold text-slate-800">0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Selesai diinput/diunggah</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Menu Unik</span>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 id="stat-total-items" class="text-2xl font-bold text-slate-800">0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Item produk terdaftar</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Aturan Asosiasi Kuat</span>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
+                                <i class="fa-solid fa-link"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 id="stat-rules-count" class="text-2xl font-bold text-slate-800">0</h3>
+                            <p class="text-xs text-emerald-600 font-medium mt-1">LIFT > 1 & Lolos Min Conf</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Lift Ratio Tertinggi</span>
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 id="stat-max-lift" class="text-2xl font-bold text-slate-800">0.00</h3>
+                            <p class="text-xs text-slate-500 mt-1">Korelasi paling signifikan</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DUA KOLOM: UPLOAD & GRAFIK RINGKASAN -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- UPLOAD DATASET AREA -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Sumber Dataset Transaksi</h3>
+                            <p class="text-xs text-slate-500 mt-1">Unggah berkas Excel/CSV atau gunakan data bawaan sampel Dapur Umi Khalid.</p>
+                            
+                            <!-- Area Drop Zone -->
+                            <div class="mt-5 border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-5 text-center transition-colors bg-slate-50/50 cursor-pointer" onclick="document.getElementById('file-input').click()">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-500 mb-2"></i>
+                                <p class="text-xs font-medium text-slate-700">Klik / Seret file transaksi ke sini</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Format .CSV, .XLSX, atau .XLS (Maks. 5MB)</p>
+                                <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-2">
+                            <button onclick="loadSampleData()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Muat Ulang Datasets Sampel Dapur Umi Khalid
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRAFIK UTAMA DASHBOARD -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base">Grafik Frekuensi Menu Terlaris</h3>
+                                <p class="text-xs text-slate-500">Menu paling sering dibeli secara keseluruhan</p>
+                            </div>
+                            <span class="text-xs font-semibold bg-brand-50 text-brand-700 px-2.5 py-1 rounded-lg">Top Item</span>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="itemFrequencyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL HASIL SINGKAT DI DASHBOARD -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Aturan Asosiasi Unggulan (Top 5 Rules)</h3>
+                            <p class="text-xs text-slate-500">Hasil perhitungan dengan Lift Ratio tertinggi</p>
+                        </div>
+                        <button onclick="switchTab('hasil')" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                            Lihat Semua <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-4">Jika Membeli (Antecedent)</th>
+                                    <th class="py-3 px-4">Maka Membeli (Consequent)</th>
+                                    <th class="py-3 px-4 text-center">Support (%)</th>
+                                    <th class="py-3 px-4 text-center">Confidence (%)</th>
+                                    <th class="py-3 px-4 text-center">Lift Ratio</th>
+                                    <th class="py-3 px-4 text-center">Status Korelasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-top-rules" class="divide-y divide-slate-100">
+                                <!-- Dynamic Insert -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PARAMETER & PROSES -->
+            <section id="tab-parameter" class="tab-content hidden space-y-6">
+                <!-- FORM PARAMETER & CONTROL PANEL -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Pengaturan Parameter Algoritma FP-Growth</h3>
+                    <p class="text-xs text-slate-500 mb-6">Tentukan batas minimum Support dan Confidence untuk penyaringan aturan asosiasi.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Min Support Input -->
+                        <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-bold text-slate-700">Minimum Support (%)</label>
+                                <span id="support-val" class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">20%</span>
+                            </div>
+                            <input type="range" id="min-support" min="5" max="80" value="20" step="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600" oninput="updateParamValues()">
+                            <p class="text-[11px] text-slate-500">Persentase minimal seberapa sering kombinasi produk muncul dalam seluruh transaksi.</p>
+                        </div>
+
+                        <!-- Min Confidence Input -->
+                        <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-bold text-slate-700">Minimum Confidence (%)</label>
+                                <span id="confidence-val" class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">50%</span>
+                            </div>
+                            <input type="range" id="min-confidence" min="10" max="90" value="50" step="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600" oninput="updateParamValues()">
+                            <p class="text-[11px] text-slate-500">Tingkat kepastian/kekuatan hubungan antar item dalam satu aturan.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="processFPGrowth()" class="py-3 px-6 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i>
+                            Jalankan Simulasi FP-Growth
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SIMULASI LANGKAH FP-TREE -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- LANGKAH 1: FREQUENT ITEMSET (1-ITEMSET) -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h4 class="font-bold text-slate-800 text-sm">1. Frequent 1-Itemset (Header Table)</h4>
+                            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">Sorted by Frequency</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-64 custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
+                                    <tr>
+                                        <th class="py-2 px-3">Nama Menu</th>
+                                        <th class="py-2 px-3 text-center">Frekuensi</th>
+                                        <th class="py-2 px-3 text-center">Support (%)</th>
+                                        <th class="py-2 px-3 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="freq-itemset-body" class="divide-y divide-slate-100 text-slate-600">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- LANGKAH 2: CONDITIONAL PATTERN BASE -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h4 class="font-bold text-slate-800 text-sm">2. Conditional Pattern Base</h4>
+                            <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">FP-Tree Extraction</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-64 custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
+                                    <tr>
+                                        <th class="py-2 px-3">Item Akhir</th>
+                                        <th class="py-2 px-3">Conditional Pattern Base</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cpb-body" class="divide-y divide-slate-100 text-slate-600">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: HASIL & REKOMENDASI -->
+            <section id="tab-hasil" class="tab-content hidden space-y-6">
+                <!-- REKOMENDASI PAKET BUNDLING MENU -->
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Rekomendasi Paket Bundling Menu Dapur Umi Khalid</h3>
+                    <p class="text-xs text-slate-500 mb-4">Paket menu yang disarankan berdasarkan hasil aturan asosiasi tervalidasi (Lift Ratio > 1).</p>
+                    
+                    <div id="bundling-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Dynamic insert card bundling -->
+                    </div>
+                </div>
+
+                <!-- GRAFIK LIFT RATIO RULES -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base mb-1">Visualisasi Nilai Lift Ratio Aturan Asosiasi</h3>
+                    <p class="text-xs text-slate-500 mb-4">Menampilkan kekuatan korelasi antar item (Garis merah = Batas Aturan Valid Lift > 1.0)</p>
+                    <div class="h-64 relative">
+                        <canvas id="liftChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TABEL LENGKAP ASSOCIATION RULES -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Tabel Aturan Asosiasi Hasil Mining (Association Rules)</h3>
+                            <p class="text-xs text-slate-500">Lengkap dengan analisis kecukupan parameter</p>
+                        </div>
+                        <button onclick="exportRulesCSV()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-csv"></i> Ekspor CSV
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-4">No</th>
+                                    <th class="py-3 px-4">Jika Membeli (Antecedent)</th>
+                                    <th class="py-3 px-4">Maka Membeli (Consequent)</th>
+                                    <th class="py-3 px-4 text-center">Support (%)</th>
+                                    <th class="py-3 px-4 text-center">Confidence (%)</th>
+                                    <th class="py-3 px-4 text-center">Lift Ratio</th>
+                                    <th class="py-3 px-4 text-center">Kesimpulan Korelasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-rules-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: DATA TRANSAKSI -->
+            <section id="tab-data" class="tab-content hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">Daftar Transaksi Sales (Matriks Item)</h3>
+                            <p class="text-xs text-slate-500">Data mentah transaksi yang digunakan dalam perhitungan</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="search-trans" placeholder="Cari ID / Menu..." onkeyup="filterTransactions()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 w-48">
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-200 sticky top-0 bg-white">
+                                <tr>
+                                    <th class="py-3 px-4">ID Transaksi</th>
+                                    <th class="py-3 px-4">Item Menu Yang Dibeli</th>
+                                    <th class="py-3 px-4 text-center">Jumlah Item</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic Insert -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JAVASCRIPT LOGIC FP-GROWTH & UI HANDLER -->
+    <script>
+        // DATASET DEFAULT SAMPLING DAPUR UMI KHALID (15 Transaksi Sampel Riil)
+        const sampleDataset = [
+            { id: "TRX-001", items: ["Ayam Crispy", "Es Teh", "Risol Mayo"] },
+            { id: "TRX-002", items: ["Ayam Crispy", "Es Teh", "Sayur Sop"] },
+            { id: "TRX-003", items: ["Sayur Sop", "Susu Lumut", "Bubur Kacang Ijo"] },
+            { id: "TRX-004", items: ["Ayam Crispy", "Es Teh", "Susu Lumut"] },
+            { id: "TRX-005", items: ["Sayur Sop", "Susu Lumut", "Ayam Crispy"] },
+            { id: "TRX-006", items: ["Ayam Crispy", "Es Teh", "Risol Mayo", "Susu Lumut"] },
+            { id: "TRX-007", items: ["Bubur Kacang Ijo", "Susu Lumut"] },
+            { id: "TRX-008", items: ["Ayam Crispy", "Sayur Sop", "Es Teh"] },
+            { id: "TRX-009", items: ["Sayur Sop", "Susu Lumut"] },
+            { id: "TRX-010", items: ["Ayam Crispy", "Es Teh"] },
+            { id: "TRX-011", items: ["Ayam Crispy", "Susu Lumut", "Risol Mayo"] },
+            { id: "TRX-012", items: ["Sayur Sop", "Bubur Kacang Ijo"] },
+            { id: "TRX-013", items: ["Ayam Crispy", "Es Teh", "Sayur Sop", "Susu Lumut"] },
+            { id: "TRX-014", items: ["Risol Mayo", "Susu Lumut"] },
+            { id: "TRX-015", items: ["Ayam Crispy", "Es Teh"] },
+        ];
+
+        let currentTransactions = [...sampleDataset];
+        let calculatedRules = [];
+        let freqChartInstance = null;
+        let liftChartInstance = null;
+
+        // ON LOAD INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            renderTransactionTable();
+            processFPGrowth();
+        }
+
+        // SWITCH TAB NAVIGASI
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            activeNav.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+            activeNav.classList.remove('text-slate-400');
+
+            // Update Titles
+            const titles = {
+                'dashboard': ['Dashboard Analisis', 'Ikhtisar pola transaksi dan metrik performa algoritma'],
+                'parameter': ['Parameter & Simulasi FP-Growth', 'Konfigurasi ambang batas dan tahap rekonstruksi FP-Tree'],
+                'hasil': ['Hasil Aturan Asosiasi & Bundling', 'Rekomendasi paket produk tervalidasi Lift Ratio > 1'],
+                'data': ['Kelola Data Transaksi', 'Daftar riwayat pembelian bahan input mining']
+            };
+            document.getElementById('page-title').innerText = titles[tabId][0];
+            document.getElementById('page-subtitle').innerText = titles[tabId][1];
+        }
+
+        function updateParamValues() {
+            document.getElementById('support-val').innerText = document.getElementById('min-support').value + '%';
+            document.getElementById('confidence-val').innerText = document.getElementById('min-confidence').value + '%';
+        }
+
+        // LOAD SAMPLE DATASET
+        function loadSampleData() {
+            currentTransactions = [...sampleDataset];
+            renderTransactionTable();
+            processFPGrowth();
+            alert("Dataset Sampel Dapur Umi Khalid berhasil dimuat kembali!");
+        }
+
+        // UPLOAD FILE HANDLER (CSV & EXCEL)
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // Parse Json to Transactions
+                const newTrans = [];
+                json.forEach((row, idx) => {
+                    if (idx === 0 || !row || row.length === 0) return; // Skip Header
+                    const transId = row[0] ? String(row[0]) : `TRX-${idx}`;
+                    let items = [];
+                    if (row[1]) {
+                        // Split items by comma if string
+                        items = String(row[1]).split(',').map(i => i.trim()).filter(i => i !== "");
+                    }
+                    if (items.length > 0) {
+                        newTrans.push({ id: transId, items: items });
+                    }
+                });
+
+                if (newTrans.length > 0) {
+                    currentTransactions = newTrans;
+                    renderTransactionTable();
+                    processFPGrowth();
+                    alert(`Berhasil mengimpor ${newTrans.length} data transaksi!`);
+                } else {
+                    alert("Format file tidak sesuai. Pastikan kolom 1: ID Transaksi, kolom 2: Daftar Item (dipisah koma).");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // RENDER TABEL DATA TRANSAKSI
+        function renderTransactionTable() {
+            const tbody = document.getElementById('transaction-table-body');
+            tbody.innerHTML = '';
+
+            currentTransactions.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-slate-800">${t.id}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${t.items.map(item => `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">${item}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center font-semibold text-slate-600">${t.items.length}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTransactions() {
+            const query = document.getElementById('search-trans').value.toLowerCase();
+            const rows = document.querySelectorAll('#transaction-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // ALGORITMA FP-GROWTH CORE ENGINE
+        function processFPGrowth() {
+            const minSupPct = parseFloat(document.getElementById('min-support').value);
+            const minConfPct = parseFloat(document.getElementById('min-confidence').value);
+            const totalTrans = currentTransactions.length;
+            const minSupCount = Math.ceil((minSupPct / 100) * totalTrans);
+
+            // 1. Hitung Frekuensi Setiap Item
+            const itemCounts = {};
+            currentTransactions.forEach(t => {
+                t.items.forEach(item => {
+                    itemCounts[item] = (itemCounts[item] || 0) + 1;
+                });
+            });
+
+            const uniqueItemsCount = Object.keys(itemCounts).length;
+
+            // 2. Filter Frequent 1-Itemset
+            const freq1Itemset = [];
+            for (const item in itemCounts) {
+                const count = itemCounts[item];
+                const supPct = (count / totalTrans) * 100;
+                freq1Itemset.push({
+                    item: item,
+                    count: count,
+                    supportPct: supPct,
+                    passed: count >= minSupCount
+                });
+            }
+
+            // Urutkan Frequent Itemset descending berdasarkan count
+            freq1Itemset.sort((a, b) => b.count - a.count);
+
+            // Render Frequent 1-Itemset Table
+            renderFreq1Table(freq1Itemset);
+
+            // Item yang lolos min support
+            const validItems = freq1Itemset.filter(i => i.passed).map(i => i.item);
+
+            // 3. Rekonstruksi Conditional Pattern Base (Simulasi Ringkas)
+            const cpbList = generateCPB(validItems);
+            renderCPBTable(cpbList);
+
+            // 4. Generate Association Rules (Kombinasi Pasangan 2-Item)
+            const rules = [];
+            const itemsToMine = validItems;
+
+            for (let i = 0; i < itemsToMine.length; i++) {
+                for (let j = 0; j < itemsToMine.length; j++) {
+                    if (i === j) continue;
+                    const ant = itemsToMine[i];
+                    const con = itemsToMine[j];
+
+                    // Hitung Support (Ant U Con)
+                    let togetherCount = 0;
+                    currentTransactions.forEach(t => {
+                        if (t.items.includes(ant) && t.items.includes(con)) {
+                            togetherCount++;
+                        }
+                    });
+
+                    const ruleSupportPct = (togetherCount / totalTrans) * 100;
+                    const antCount = itemCounts[ant] || 0;
+                    const conCount = itemCounts[con] || 0;
+
+                    if (ruleSupportPct >= minSupPct && antCount > 0) {
+                        const confidencePct = (togetherCount / antCount) * 100;
+                        const expectedConSup = conCount / totalTrans;
+                        const liftRatio = expectedConSup > 0 ? (confidencePct / 100) / expectedConSup : 0;
+
+                        if (confidencePct >= minConfPct) {
+                            rules.push({
+                                antecedent: ant,
+                                consequent: con,
+                                support: ruleSupportPct,
+                                confidence: confidencePct,
+                                lift: liftRatio,
+                                isValid: liftRatio > 1.0
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Urutkan rules berdasarkan Lift Ratio terbanyak
+            rules.sort((a, b) => b.lift - a.lift);
+            calculatedRules = rules;
+
+            // RENDER UI HASIL
+            updateDashboardStats(totalTrans, uniqueItemsCount, rules);
+            renderDashboardTopRules(rules.slice(0, 5));
+            renderFullRules(rules);
+            renderBundlingCards(rules.filter(r => r.isValid));
+            renderCharts(freq1Itemset, rules);
+        }
+
+        // CONDITIONAL PATTERN BASE SIMULATION
+        function generateCPB(validItems) {
+            const cpb = [];
+            validItems.slice().reverse().forEach(item => {
+                const patterns = [];
+                currentTransactions.forEach(t => {
+                    if (t.items.includes(item)) {
+                        const prefix = t.items.filter(i => i !== item && validItems.includes(i));
+                        if (prefix.length > 0) {
+                            patterns.push(`{${prefix.join(', ')}}`);
+                        }
+                    }
+                });
+                cpb.push({
+                    item: item,
+                    patterns: patterns.length > 0 ? patterns.join(' | ') : 'None'
+                });
+            });
+            return cpb;
+        }
+
+        // RENDER HELPERS
+        function renderFreq1Table(list) {
+            const tbody = document.getElementById('freq-itemset-body');
+            tbody.innerHTML = '';
+            list.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-3 font-medium text-slate-800">${item.item}</td>
+                    <td class="py-2 px-3 text-center">${item.count}</td>
+                    <td class="py-2 px-3 text-center">${item.supportPct.toFixed(1)}%</td>
+                    <td class="py-2 px-3 text-center">
+                        ${item.passed ? 
+                            '<span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">Lolos</span>' : 
+                            '<span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded text-[10px] font-bold">Gagal</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCPBTable(list) {
+            const tbody = document.getElementById('cpb-body');
+            tbody.innerHTML = '';
+            list.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-3 font-bold text-brand-700">${row.item}</td>
+                    <td class="py-2 px-3 text-slate-600 font-mono text-[11px]">${row.patterns}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateDashboardStats(totalTrans, totalItems, rules) {
+            document.getElementById('stat-total-trans').innerText = totalTrans;
+            document.getElementById('stat-total-items').innerText = totalItems;
+            
+            const validRulesCount = rules.filter(r => r.isValid).length;
+            document.getElementById('stat-rules-count').innerText = validRulesCount;
+
+            const maxLift = rules.length > 0 ? Math.max(...rules.map(r => r.lift)).toFixed(2) : '0.00';
+            document.getElementById('stat-max-lift').innerText = maxLift;
+        }
+
+        function renderDashboardTopRules(rules) {
+            const tbody = document.getElementById('dashboard-top-rules');
+            tbody.innerHTML = '';
+
+            if (rules.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400">Tidak ada aturan yang memenuhi parameter.</td></tr>`;
+                return;
+            }
+
+            rules.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-slate-800">${r.antecedent}</td>
+                    <td class="py-3 px-4 font-semibold text-brand-600">${r.consequent}</td>
+                    <td class="py-3 px-4 text-center">${r.support.toFixed(1)}%</td>
+                    <td class="py-3 px-4 text-center">${r.confidence.toFixed(1)}%</td>
+                    <td class="py-3 px-4 text-center font-bold">${r.lift.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-center">
+                        ${r.isValid ? 
+                            '<span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md text-[10px] font-bold">Korelasi Positif (Valid)</span>' : 
+                            '<span class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md text-[10px] font-bold">Tidak Signifikan</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderFullRules(rules) {
+            const tbody = document.getElementById('full-rules-body');
+            tbody.innerHTML = '';
+
+            if (rules.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Aturan asosiasi kosong. Coba turunkan ambang Min Support / Min Confidence.</td></tr>`;
+                return;
+            }
+
+            rules.forEach((r, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-400">${idx + 1}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">IF { ${r.antecedent} }</td>
+                    <td class="py-3 px-4 font-semibold text-brand-600">THEN { ${r.consequent} }</td>
+                    <td class="py-3 px-4 text-center">${r.support.toFixed(1)}%</td>
+                    <td class="py-3 px-4 text-center">${r.confidence.toFixed(1)}%</td>
+                    <td class="py-3 px-4 text-center font-bold text-slate-800">${r.lift.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-center">
+                        ${r.isValid ? 
+                            '<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-emerald-200"><i class="fa-solid fa-check"></i> Valid (Lift > 1)</span>' : 
+                            '<span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-[10px] font-medium">Diabaikan</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBundlingCards(validRules) {
+            const container = document.getElementById('bundling-cards');
+            container.innerHTML = '';
+
+            if (validRules.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">Belum ada paket bundling yang disarankan. Sesuaikan parameter di menu 'Parameter & Proses'.</div>`;
+                return;
+            }
+
+            // Ambil maksimal 6 aturan teratas
+            validRules.slice(0, 6).forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden";
+                card.innerHTML = `
+                    <div class="absolute -right-3 -top-3 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center text-amber-500 font-bold text-xs">
+                        #${idx + 1}
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full mb-3">
+                            <i class="fa-solid fa-fire"></i> Rekomendasi Paket Promo
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">Paket Hemat: ${r.antecedent} + ${r.consequent}</h4>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                            Pelanggan yang membeli <span class="font-semibold text-slate-700">${r.antecedent}</span> memiliki kemungkinan sebesar <span class="font-bold text-brand-600">${r.confidence.toFixed(1)}%</span> untuk membeli <span class="font-semibold text-slate-700">${r.consequent}</span>.
+                        </p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Nilai Keeratan:</span>
+                        <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Lift ${r.lift.toFixed(2)}x</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // CHART VISUALIZATIONS
+        function renderCharts(freqItems, rules) {
+            // 1. Chart Frekuensi Menu
+            const freqCtx = document.getElementById('itemFrequencyChart').getContext('2d');
+            if (freqChartInstance) freqChartInstance.destroy();
+
+            const topFreq = freqItems.slice(0, 6);
+            freqChartInstance = new Chart(freqCtx, {
+                type: 'bar',
+                data: {
+                    labels: topFreq.map(i => i.item),
+                    datasets: [{
+                        label: 'Frekuensi Penjualan',
+                        data: topFreq.map(i => i.count),
+                        backgroundColor: '#2563eb',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 2. Chart Lift Ratio
+            const liftCtx = document.getElementById('liftChart').getContext('2d');
+            if (liftChartInstance) liftChartInstance.destroy();
+
+            const topRules = rules.slice(0, 8);
+            liftChartInstance = new Chart(liftCtx, {
+                type: 'line',
+                data: {
+                    labels: topRules.map(r => `${r.antecedent} → ${r.consequent}`),
+                    datasets: [
+                        {
+                            label: 'Nilai Lift Ratio',
+                            data: topRules.map(r => r.lift),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Batas Ambang Valid (Lift = 1.0)',
+                            data: Array(topRules.length).fill(1.0),
+                            borderColor: '#ef4444',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // EXPORT TO CSV
+        function exportRulesCSV() {
+            if (calculatedRules.length === 0) {
+                alert("Tidak ada data aturan untuk diekspor!");
+                return;
+            }
+
+            let csv = "No,Antecedent (Jika),Consequent (Maka),Support (%),Confidence (%),Lift Ratio,Validitas\n";
+            calculatedRules.forEach((r, idx) => {
+                csv += `"${idx + 1}","${r.antecedent}","${r.consequent}","${r.support.toFixed(2)}","${r.confidence.toFixed(2)}","${r.lift.toFixed(2)}","${r.isValid ? 'Valid' : 'Tidak Valid'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Hasil_FPGrowth_DapurUmiKhalid.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
