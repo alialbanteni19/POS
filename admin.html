@@ -14,6 +14,34 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
+       // Proteksi Sesi Login Admin Berdasarkan Data Karyawan
+window.addEventListener('DOMContentLoaded', () => {
+    const isAdminLoggedIn = sessionStorage.getItem('harasa_admin_logged_in');
+    
+    if (isAdminLoggedIn !== 'true') {
+        const pinInput = prompt("🔒 Halaman Terproteksi!\nMasukkan PIN Akun Admin / Supervisor:");
+        
+        if (pinInput) {
+            // Ambil daftar staff dari localStorage (yang biasa diatur di menu Kelola Karyawan)
+            const savedStaff = JSON.parse(localStorage.getItem('harasa_staff_list')) || [];
+            
+            // Cek apakah ada staff dengan peran Admin/Supervisor (atau cocok PIN-nya)
+            // Kamu bisa sesuaikan kondisi role-nya, misal: staff.role.toLowerCase().includes('admin') atau supervisor
+            const validAdmin = savedStaff.find(s => s.pin === pinInput && (s.role.toLowerCase().includes('admin') || s.role.toLowerCase().includes('supervisor') || s.role.toLowerCase().includes('kasir utama')));
+            
+            if (validAdmin) {
+                sessionStorage.setItem('harasa_admin_logged_in', 'true');
+                sessionStorage.setItem('harasa_logged_admin_name', validAdmin.name);
+                alert(`Selamat datang kembali, ${validAdmin.name}!`);
+            } else {
+                alert("PIN Salah atau bukan hak akses Admin! Akses ditolak.");
+                window.location.href = 'index.html';
+            }
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+});
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -282,66 +310,70 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: SOP & STOCK OPNAME (TERINTEGRASI DENGAN KASIR) -->
+          <!-- TAB 4: SOP & STOCK OPNAME (DISAMAKAN DENGAN KASIR & SINKRON) -->
                 <div x-show="activeTab === 'sop_stock'" class="space-y-6">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3 class="font-bold text-base text-white">Pengaturan SOP & Stok Bahan Baku (Sinkron ke POS Kasir)</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Atur bahan baku, satuan resep, stok awal, dan SOP instruksi barista. Data ini otomatis masuk ke menu Stock Opname Kasir.</p>
-            </div>
-            <div class="flex space-x-2">
-                <button @click="openStockItemModal()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow cursor-pointer">
-                    <i class="fa-solid fa-plus mr-1"></i> Tambah Bahan Baku
-                </button>
-                <button @click="saveStockSopSettings()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow cursor-pointer">
-                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan & Sinkron POS
-                </button>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-300">
-                <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800">
-                    <tr>
-                        <th class="p-3">Nama Bahan Baku</th>
-                        <th class="p-3 text-center">Satuan</th>
-                        <th class="p-3 text-center">Stok Awal POS</th>
-                        <th class="p-3 text-center">Batas Min Alert</th>
-                        <!-- KOLOM TAMBAHAN UNTUK ACC OTOMATIS -->
-                        <th class="p-3 text-center">Izinkan Otomatis (ACC SOP)</th>
-                        <th class="p-3">SOP / Catatan Instruksi Barista</th>
-                        <th class="p-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60">
-                    <template x-for="(item, idx) in stockItems" :key="item.id">
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="p-3 font-bold text-white" x-text="item.name"></td>
-                            <td class="p-3 text-center font-mono text-amber-400" x-text="item.unit"></td>
-                            <td class="p-3 text-center font-bold text-slate-200" x-text="item.stokAwal"></td>
-                            <td class="p-3 text-center">
-                                <input type="number" x-model.number="item.minAlert" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-bold text-rose-400 outline-none focus:border-brand-500">
-                            </td>
-                            <!-- CHECKBOX TAMBAHAN UNTUK ACC OTOMATIS -->
-                            <td class="p-3 text-center">
-                                <input type="checkbox" x-model="item.autoDeduct" class="w-4 h-4 accent-brand-500 rounded cursor-pointer" title="Centang agar stok keluar otomatis dari penjualan">
-                            </td>
-                            <td class="p-3">
-                                <input type="text" x-model="item.sopNote" placeholder="SOP misal: Simpan di chiller suhu 2-4°C..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 outline-none focus:border-brand-500">
-                            </td>
-                            <td class="p-3 text-center">
-                                <button @click="deleteStockItem(idx)" class="px-2.5 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg border border-rose-500/30 font-bold text-[11px] transition cursor-pointer">
-                                    <i class="fa-solid fa-trash"></i>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-base text-white">Pengaturan SOP & Stock Opname Bahan Baku</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Kelola bahan baku, satuan, stok awal, stok masuk/keluar, dan SOP barista. Sinkron dua arah dengan kasir.</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button @click="openStockItemModal()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl shadow cursor-pointer">
+                                    <i class="fa-solid fa-plus mr-1"></i> Tambah Bahan Baku
                                 </button>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                                <button @click="saveStockSopSettings()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow cursor-pointer">
+                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan & Sinkron POS
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-3">Nama Bahan Baku</th>
+                                        <th class="p-3 text-center">Satuan</th>
+                                        <th class="p-3 text-center">Stok Awal</th>
+                                        <th class="p-3 text-center">Stok Masuk</th>
+                                        <th class="p-3 text-center">Stok Keluar</th>
+                                        <th class="p-3 text-center">Stok Sisa</th>
+                                        <th class="p-3 text-center">Min Alert</th>
+                                        <th class="p-3 text-center">Auto-Deduct</th>
+                                        <th class="p-3">SOP / Instruksi Barista</th>
+                                        <th class="p-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/60">
+                                    <template x-for="(item, idx) in stockItems" :key="item.id">
+                                        <tr class="hover:bg-slate-800/40">
+                                            <td class="p-3 font-bold text-white" x-text="item.name"></td>
+                                            <td class="p-3 text-center font-mono text-amber-400" x-text="item.unit"></td>
+                                            <td class="p-3 text-center font-bold text-slate-300" x-text="item.stokAwal"></td>
+                                            <td class="p-3 text-center font-bold text-emerald-400" x-text="item.stokMasuk || 0"></td>
+                                            <td class="p-3 text-center font-bold text-rose-400" x-text="item.stokKeluar || 0"></td>
+                                            <td class="p-3 text-center font-extrabold text-amber-400 text-sm bg-slate-950/60" x-text="item.sisa ?? item.stokAwal"></td>
+                                            <td class="p-3 text-center">
+                                                <input type="number" x-model.number="item.minAlert" class="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-bold text-rose-400 outline-none focus:border-brand-500">
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <input type="checkbox" x-model="item.autoDeduct" class="w-4 h-4 accent-brand-500 rounded cursor-pointer" title="Potong otomatis saat penjualan">
+                                            </td>
+                                            <td class="p-3">
+                                                <input type="text" x-model="item.sopNote" placeholder="SOP barista..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 outline-none focus:border-brand-500">
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <button @click="deleteStockItem(idx)" class="px-2.5 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg border border-rose-500/30 font-bold text-[11px] transition cursor-pointer">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- TAB 5: KELOLA AKUN KARYAWAN -->
                 <div x-show="activeTab === 'staff_accounts'" class="space-y-6">
@@ -490,52 +522,58 @@
                 </div>
 
                 <!-- TAB 8: LAPORAN PENJUALAN -->
-                <div x-show="activeTab === 'sales'" class="space-y-4">
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-                        <div>
-                            <h3 class="font-bold text-base text-white">Riwayat Transaksi Penjualan</h3>
-                            <p class="text-xs text-slate-400 mt-0.5">Seluruh pesanan pelanggan yang masuk dari aplikasi kasir.</p>
-                        </div>
+<div x-show="activeTab === 'sales'" class="space-y-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <h3 class="font-bold text-base text-white">Riwayat Transaksi Penjualan</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Seluruh pesanan pelanggan yang masuk dari aplikasi kasir secara real-time.</p>
+            </div>
+            
+            <!-- FILTER TANGGAL -->
+            <div class="flex items-center space-x-2">
+                <input type="date" x-model="adminFilterDate" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-brand-500">
+                <button @click="adminFilterDate = ''" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer">
+                    Reset Filter
+                </button>
+            </div>
+        </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-300">
-                                <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800">
-                                    <tr>
-                                        <th class="p-3">ID Transaksi</th>
-                                        <th class="p-3">Jam</th>
-                                        <th class="p-3">Nama Customer</th>
-                                        <th class="p-3">Kasir</th>
-                                        <th class="p-3">Metode Bayar</th>
-                                        <th class="p-3 text-right">Total Tagihan</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-800/60">
-                                    <template x-if="transactions.length === 0">
-                                        <tr>
-                                            <td colspan="6" class="p-8 text-center text-slate-500 italic">Belum ada transaksi penjualan hari ini.</td>
-                                        </tr>
-                                    </template>
-                                    <template x-for="trx in transactions" :key="trx.id">
-                                        <tr class="hover:bg-slate-800/40">
-                                            <td class="p-3 font-mono font-bold text-amber-400" x-text="'#' + trx.id"></td>
-                                            <td class="p-3 text-slate-400" x-text="trx.time"></td>
-                                            <td class="p-3 font-semibold text-white" x-text="trx.customerName"></td>
-                                            <td class="p-3 text-slate-300" x-text="trx.cashierName"></td>
-                                            <td class="p-3">
-                                                <span :class="trx.paymentMethod === 'Tunai' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : (trx.paymentMethod === 'Debit' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-brand-500/10 text-brand-400 border-brand-500/20')" class="px-2 py-0.5 rounded border text-[10px] font-bold" x-text="trx.paymentMethod || 'Tunai'"></span>
-                                            </td>
-                                            <td class="p-3 text-right font-extrabold text-emerald-400" x-text="formatRupiah(trx.grandTotal)"></td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </main>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800">
+                    <tr>
+                        <th class="p-3">ID Transaksi</th>
+                        <th class="p-3">Jam / Waktu</th>
+                        <th class="p-3">Nama Customer</th>
+                        <th class="p-3">Kasir</th>
+                        <th class="p-3">Metode Bayar</th>
+                        <th class="p-3 text-right">Total Tagihan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    <template x-if="getAdminFilteredTransactions().length === 0">
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-500 italic">Belum ada transaksi penjualan pada tanggal tersebut.</td>
+                        </tr>
+                    </template>
+                    <template x-for="trx in getAdminFilteredTransactions()" :key="trx.id">
+                        <tr class="hover:bg-slate-800/40">
+                            <td class="p-3 font-mono font-bold text-amber-400" x-text="'#' + trx.id"></td>
+                            <td class="p-3 text-slate-400" x-text="trx.time"></td>
+                            <td class="p-3 font-semibold text-white" x-text="trx.customerName"></td>
+                            <td class="p-3 text-slate-300" x-text="trx.cashierName"></td>
+                            <td class="p-3">
+                                <span :class="trx.paymentMethod === 'Tunai' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : (trx.paymentMethod === 'Debit' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-brand-500/10 text-brand-400 border-brand-500/20')" class="px-2 py-0.5 rounded border text-[10px] font-bold" x-text="trx.paymentMethod || 'Tunai'"></span>
+                            </td>
+                            <td class="p-3 text-right font-extrabold text-emerald-400" x-text="formatRupiah(trx.grandTotal)"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
     <!-- MODAL POPUP STRUK REKAP SHIFT DI ADMIN -->
     <div x-show="showAdminShiftModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="display: none;">
@@ -600,7 +638,7 @@
             <form @submit.prevent="saveNewStockItem()" class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">Nama Bahan Baku</label>
-                    <input type="text" x-model="newStockForm.name" required placeholder="Contoh: Single Origin" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
+                    <input type="text" x-model="newStockForm.name" required placeholder="Contoh: Matcha Powder" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
                 </div>
 
                 <div>
@@ -620,12 +658,12 @@
 
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">Batas Minimum Alert</label>
-                    <input type="number" x-model.number="newStockForm.minAlert" required placeholder="Contoh: 100" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
+                    <input type="number" x-model.number="newStockForm.minAlert" required placeholder="Contoh: 50" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">SOP / Catatan Instruksi Barista</label>
-                    <input type="text" x-model="newStockForm.sopNote" placeholder="Contoh: Timbang teliti sebelum di-extract..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
+                    <input type="text" x-model="newStockForm.sopNote" placeholder="Contoh: Simpan di tempat sejuk..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-brand-500">
                 </div>
 
                 <div class="pt-2">
@@ -674,7 +712,7 @@
             </form>
         </div>
     </div>
-
+    
     <!-- SCRIPT ALPINE APP ADMIN -->
     <script>
         function adminApp() {
@@ -685,6 +723,7 @@
                 expenseLogs: [],
                 attendanceLogs: [],
                 transactions: [],
+                adminFilterDate: '',
 
                 showAdminShiftModal: false,
                 selectedAdminShift: {},
@@ -724,6 +763,7 @@
                     setInterval(() => { this.updateTime(); }, 1000);
 
                     this.reloadAdminData(false);
+                    this.loadTransactionsFromPOS();
 
                     setInterval(() => {
                         this.reloadAdminData(false);
@@ -747,6 +787,14 @@
                         default: return 'Admin Pusat';
                     }
                 },
+
+                getAdminFilteredTransactions() {
+                    if (!this.adminFilterDate) return this.transactions;
+                    return this.transactions.filter(trx => {
+                // Mencocokkan berdasarkan properti tanggal (trx.date) atau string waktu
+                return trx.date === this.adminFilterDate || (trx.time && trx.time.includes(this.adminFilterDate));
+                });
+            },
 
                 reloadAdminData(showAlert = true) {
                     const savedShifts = localStorage.getItem('du_shift_reports');
@@ -776,6 +824,7 @@
 
                     if (showAlert) alert('Data Admin Pusat Berhasil Diperbarui!');
                 },
+                
 
                 formatRupiah(num) {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
@@ -801,23 +850,12 @@
                     this.selectedAdminShift = report;
                     this.showAdminShiftModal = true;
                 },
-
+                
+                
                 saveStockSopSettings() {
-                    // Sinkronisasi ke localStorage du_products yang dibaca oleh POS Kasir
-                    const formattedForPos = this.stockItems.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        unit: item.unit,
-                        stokAwal: item.stokAwal || 0,
-                        stokMasuk: 0,
-                        stokKeluar: 0,
-                        sisa: item.stokAwal || 0,
-                        stokFisik: item.stokAwal || 0,
-                        minAlert: item.minAlert || 0,
-                        sopNote: item.sopNote || ''
-                    }));
-                    localStorage.setItem('du_products', JSON.stringify(formattedForPos));
-                    alert('SOP & Data Stok Opname berhasil disimpan dan otomatis disinkronkan ke POS Kasir!');
+                    // Simpan seluruh state stockItems ke localStorage du_products agar sinkron dengan kasir
+                    localStorage.setItem('du_products', JSON.stringify(this.stockItems));
+                    alert('SOP & Data Stock Opname berhasil disimpan dan otomatis disinkronkan ke POS Kasir!');
                 },
 
                 openStockItemModal() {
@@ -826,30 +864,51 @@
                 },
 
                 saveNewStockItem() {
+                    const stokAwalVal = parseInt(this.newStockForm.stokAwal) || 0;
                     const newItem = {
                         id: Date.now(),
                         name: this.newStockForm.name,
                         unit: this.newStockForm.unit,
-                        stokAwal: parseInt(this.newStockForm.stokAwal) || 0,
-                        minAlert: parseInt(this.newStockForm.minAlert) || 0,
-                        sopNote: this.newStockForm.sopNote,
+                        stokAwal: stokAwalVal,
                         stokMasuk: 0,
                         stokKeluar: 0,
-                        sisa: parseInt(this.newStockForm.stokAwal) || 0,
-                        stokFisik: parseInt(this.newStockForm.stokAwal) || 0
+                        sisa: stokAwalVal,
+                        stokFisik: stokAwalVal,
+                        minAlert: parseInt(this.newStockForm.minAlert) || 0,
+                        autoDeduct: false, // Menambahkan dukungan auto-deduct sinkron kasir
+                        sopNote: this.newStockForm.sopNote || ''
                     };
                     this.stockItems.push(newItem);
                     localStorage.setItem('du_products', JSON.stringify(this.stockItems));
                     this.showStockModal = false;
-                    alert('Bahan baku baru berhasil ditambahkan!');
+                    alert('Bahan baku baru berhasil ditambahkan dan disinkronkan ke Kasir!');
                 },
 
                 deleteStockItem(idx) {
                     if (confirm('Hapus bahan baku ini dari daftar stock opname?')) {
                         this.stockItems.splice(idx, 1);
                         localStorage.setItem('du_products', JSON.stringify(this.stockItems));
+
+                        fetch('http://localhost:3000/api/transactions')
+                        .then(res => res.json())
+                        .then(data => {
+                            // Sesuaikan kolom SQLite agar cocok dengan variabel tabel di admin.html
+                            this.transactions = data.transactions.map(t => ({
+                                id: t.id,
+                                date: t.date,
+                                time: t.time,
+                                shiftOpenTime: t.shift_open_time,
+                                customerName: t.customer_name,
+                                cashierName: t.cashier_name,
+                                paymentMethod: t.payment_method,
+                                grandTotal: t.grand_total,
+                                refunded: t.refunded === 1
+                            }));
+                        })
+                        .catch(err => console.error("Gagal sinkron data admin dari SQLite:", err));
                     }
                 },
+                
 
                 openStaffModal() {
                     this.isEditStaff = false;
